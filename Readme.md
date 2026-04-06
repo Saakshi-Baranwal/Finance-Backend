@@ -190,9 +190,3 @@ Route → Controller → Service → Database
 ## Author
 
 **Saakshi Baranwal**
-
----
-
-## Notes
-
-This project focuses on clean backend design, proper access control, and scalable architecture rather than just CRUD functionality.
