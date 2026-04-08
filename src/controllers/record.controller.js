@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const createRecord = async (req, res, next) => {
   try {
-    const record = await recordService.create(req.body, req.user.id);
+    const record = await recordService.create(req.body, req.user);
 
     res
       .status(201)
