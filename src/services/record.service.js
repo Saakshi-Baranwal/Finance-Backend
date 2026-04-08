@@ -2,20 +2,6 @@
 import { FinancialRecord } from "../models/financialRecord.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
-// export const create = async (data, userId) => {
-//   const { amount, type, category, date } = data;
-
-//   if (!amount || !type || !category || !date) {
-//     throw new ApiError(400, "Missing required fields");
-//   }
-
-//   const record = await FinancialRecord.create({
-//     ...data,
-//     createdBy: userId,
-//   });
-
-//   return record;
-// };
 export const create = async (data, user) => {
   const createdBy =
     user.role === "admin" && data.userId

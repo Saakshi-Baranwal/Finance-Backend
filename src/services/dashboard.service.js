@@ -2,37 +2,9 @@
 import { FinancialRecord } from "../models/financialRecord.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
-// export const getSummary = async () => {
-//   const data = await FinancialRecord.aggregate([
-//     { $match: { isDeleted: false } },
-//     {
-//       $group: {
-//         _id: "$type",
-//         total: { $sum: "$amount" },
-//       },
-//     },
-//   ]);
 
-//   if (!data) {
-//     throw new ApiError(500, "Failed to fetch summary");
-//   }
-
-//   let totalIncome = 0;
-//   let totalExpense = 0;
-
-//   data.forEach((item) => {
-//     if (item._id === "income") totalIncome = item.total;
-//     if (item._id === "expense") totalExpense = item.total;
-//   });
-
-//   return {
-//     totalIncome,
-//     totalExpense,
-//     netBalance: totalIncome - totalExpense,
-//   };
-// };
 export const getSummary = async () => {
-  // Basic totals
+  
   const totals = await FinancialRecord.aggregate([
     { $match: { isDeleted: false } },
     {
@@ -51,7 +23,7 @@ export const getSummary = async () => {
     if (item._id === "expense") totalExpense = item.total;
   });
 
-  // Category totals
+
   const categoryTotals = await FinancialRecord.aggregate([
     { $match: { isDeleted: false } },
     {
@@ -69,14 +41,14 @@ export const getSummary = async () => {
     }
   ]);
 
-  // Recent activity
+
   const recentActivity = await FinancialRecord.find({
     isDeleted: false
   })
     .sort({ createdAt: -1 })
     .limit(5);
 
-  // Monthly trends
+
   const monthlyTrends = await FinancialRecord.aggregate([
     { $match: { isDeleted: false } },
     {

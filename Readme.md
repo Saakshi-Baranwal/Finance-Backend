@@ -8,7 +8,8 @@ A robust backend system designed to manage financial records with role-based acc
 
 ### Authentication & Authorization
 
-* JWT-based authentication
+* JWT-based authentication using access token and refresh token
+* Token versioning implemented to invalidate access tokens immediately on logout
 * Role-based access control (RBAC)
 * Roles:
 
@@ -41,7 +42,10 @@ A robust backend system designed to manage financial records with role-based acc
 * Total income
 * Total expenses
 * Net balance
-* Aggregated financial insights using MongoDB pipelines
+* Category-wise totals for better financial breakdown  
+* Recent activity (latest transactions)  
+* Monthly financial trends (income vs expense over time)  
+* Efficient data aggregation using MongoDB aggregation pipelines
 
 ---
 
@@ -60,6 +64,7 @@ A robust backend system designed to manage financial records with role-based acc
 * Centralized error handling
 * Standardized API responses
 * Clean layered architecture
+* Implemented authentication using access token and refresh token
 
 ---
 
@@ -95,6 +100,8 @@ src/
 
 * `POST /api/auth/register`
 * `POST /api/auth/login`
+* `POST /api/auth/refresh-token`
+* `POST /api/auth/logout`
 
 ### Users (Admin only)
 
@@ -121,8 +128,11 @@ Create a `.env` file:
 ```
 PORT=8000
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
 CORS_ORIGIN=http://localhost:8000
+JWT_ACCESS_SECRET=your_secret_key
+JWT_REFRESH_SECRET=your_secret_key
+ACCESS_TOKEN_EXPIRY=15m
+REFRESH_TOKEN_EXPIRY=7d
 ```
 
 ---
@@ -174,16 +184,6 @@ Route → Controller → Service → Database
 * Users are assigned the default role `viewer` during registration
 * Admin privileges are assigned manually or via admin endpoints
 * Soft delete is used instead of permanent deletion
-
----
-
-## Future Improvements
-
-* Pagination & search
-* Advanced analytics (monthly trends, category insights)
-* Unit & integration tests
-* API documentation (Swagger)
-* Refresh token mechanism
 
 ---
 

@@ -1,7 +1,30 @@
 
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import {ApiError} from "../utils/ApiError.js";
+import { ApiError } from "../utils/ApiError.js";
+
+
+const generateAccessToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+      version: user.tokenVersion 
+    },
+    process.env.JWT_ACCESS_SECRET,
+    { expiresIn: "15m" }
+  );
+};
+
+
+const generateRefreshToken = (user) => {
+  return jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d" }
+  );
+};
+
 
 export const register = async ({ name, email, password }) => {
   if (!name || !email || !password) {
@@ -15,10 +38,9 @@ export const register = async ({ name, email, password }) => {
 
   const user = await User.create({ name, email, password });
 
-  const createdUser = await User.findById(user._id).select("-password");
-
-  return createdUser;
+  return await User.findById(user._id).select("-password");
 };
+
 
 export const login = async ({ email, password }) => {
   if (!email || !password) {
@@ -32,16 +54,16 @@ export const login = async ({ email, password }) => {
   }
 
   const isMatch = await user.comparePassword(password);
-
   if (!isMatch) {
     throw new ApiError(401, "Invalid credentials");
   }
 
-  const token = jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "1d" }
-  );
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+
+  user.refreshToken = refreshToken;
+  await user.save();
 
   return {
     user: {
@@ -50,6 +72,46 @@ export const login = async ({ email, password }) => {
       email: user.email,
       role: user.role,
     },
-    token,
+    accessToken,
+    refreshToken,
   };
+};
+
+
+export const refreshAccessToken = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token required");
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+  } catch {
+    throw new ApiError(401, "Invalid refresh token");
+  }
+
+  const user = await User.findById(decoded.id);
+
+  if (!user || user.refreshToken !== refreshToken) {
+    throw new ApiError(401, "Invalid refresh token");
+  }
+
+  const newAccessToken = generateAccessToken(user);
+
+  return { accessToken: newAccessToken };
+};
+
+
+export const logout = async (userId) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+
+  user.tokenVersion += 1;
+  user.refreshToken = null;
+
+  await user.save();
 };
